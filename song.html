@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A song for you · Heartsong</title>
+<meta property="og:title" content="Someone wrote a song just for you 🎶">
+<meta property="og:description" content="Press play. It's about you.">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0a0a;--card:#121212;--line:#2e2a22;--ink:#f8f5ee;--muted:#bdb5a6;--dim:#7d766a;--amber:#d9b45a;--rose:#e8cf8a;--glow:linear-gradient(135deg,#a8802f 0%,#f3dc8f 48%,#c49a3c 100%)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(1000px 600px at 50% -10%,#3a3018 0%,transparent 65%),var(--bg);color:var(--ink);font-family:Jost,system-ui,sans-serif;min-height:100vh;-webkit-font-smoothing:antialiased}
+.wrap{max-width:540px;margin:0 auto;padding:28px 22px 70px;text-align:center}
+.brand{font-family:'Cormorant Garamond',serif;font-weight:700;color:var(--muted);font-size:15px;letter-spacing:.02em}
+.eyebrow{text-transform:uppercase;letter-spacing:.18em;font-size:12px;color:var(--amber);font-weight:700;margin-top:34px}
+h1{font-family:'Cormorant Garamond',serif;font-size:clamp(34px,9vw,52px);line-height:1.05;margin:12px 0 10px}
+.for{color:var(--muted);font-size:17px}
+.for b{color:var(--ink)}
+.disc{width:min(260px,70vw);aspect-ratio:1;margin:34px auto 26px;border-radius:50%;position:relative;cursor:pointer;
+  background:repeating-radial-gradient(circle,#050505 0 3px,#141414 3px 5px);box-shadow:0 0 100px -10px #c9a24a55,0 30px 60px -20px #000}
+.disc.spin{animation:spin 3s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.disc .label{position:absolute;inset:32%;border-radius:50%;background:var(--glow);display:grid;place-items:center;color:#0a0a0a;font-size:30px}
+.play{display:inline-flex;align-items:center;gap:10px;background:var(--glow);color:#0a0a0a;border:0;border-radius:999px;padding:17px 32px;font:700 18px Jost,system-ui,sans-serif;cursor:pointer;box-shadow:0 12px 34px -12px #b8913a}
+.seek{display:flex;align-items:center;gap:10px;margin:20px auto 0;max-width:380px;color:var(--dim);font-size:13px;font-variant-numeric:tabular-nums}
+.seek input{flex:1;accent-color:var(--amber)}
+.note{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px;margin:34px 0 10px;text-align:left}
+.note h3{font-size:12px;text-transform:uppercase;letter-spacing:.16em;color:var(--rose);margin-bottom:10px}
+.note p{font-family:'Cormorant Garamond',serif;font-style:italic;font-size:19px;line-height:1.55}
+.note .sig{font-style:normal;font-family:Jost;color:var(--muted);font-size:15px;margin-top:12px}
+.lyrics{text-align:left;margin-top:30px}
+.sec{margin-bottom:24px}
+.sec h4{font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:var(--dim);margin-bottom:8px}
+.sec.chorus{border-left:3px solid var(--amber);padding-left:14px}
+.sec p{font-family:'Cormorant Garamond',serif;font-size:19px;line-height:1.6}
+.album{position:relative;width:min(270px,68vw);aspect-ratio:1;margin:34px auto 28px;cursor:pointer}
+.album .rw{position:absolute;top:4%;left:4%;width:92%;height:92%;transform:translateX(26%);transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.album.spin .rw{transform:translateX(46%)}
+.album .rec{width:100%;height:100%;border-radius:50%;background:repeating-radial-gradient(circle,#050505 0 3px,#141414 3px 5px);box-shadow:0 10px 30px -10px #000;position:relative}
+.album.spin .rec{animation:spin 3s linear infinite}
+.album .rec:after{content:"✦";position:absolute;inset:34%;border-radius:50%;background:linear-gradient(135deg,#a8802f,#f3dc8f 48%,#c49a3c);display:grid;place-items:center;color:#0a0a0a;font-size:18px}
+.album .sleeve{position:absolute;inset:0;border:1px solid #8a7340;border-radius:4px;overflow:hidden;box-shadow:0 30px 70px -20px #000,0 0 90px -20px #c9a24a66;transform:translateX(-12%);transition:transform .9s cubic-bezier(.2,.8,.2,1)}
+.album.spin .sleeve{transform:translateX(-22%)}
+.album .sleeve img{width:100%;height:100%;object-fit:cover;display:block}
+mark{background:linear-gradient(transparent 55%,#d9b45a44 55%);color:inherit}
+.actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:30px}
+.act{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:12px 18px;font:500 15px Jost,system-ui,sans-serif;cursor:pointer;text-decoration:none}
+.cta{margin-top:50px;padding-top:30px;border-top:1px solid var(--line);color:var(--muted)}
+.cta a{color:var(--amber);font-weight:700}
+.wait{margin-top:40px}
+.pulse{width:14px;height:14px;border-radius:50%;background:var(--amber);margin:0 auto 18px;animation:pulse 1.6s ease infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 #d9b45a99}100%{box-shadow:0 0 0 22px #d9b45a00}}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(90px);background:#f8f5ee;color:#0a0a0a;padding:11px 18px;border-radius:999px;font-weight:700;font-size:14px;transition:transform .3s}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ---- luxury finish ---- */
+body{letter-spacing:.01em}
+h1,h2,.serif{font-weight:600;letter-spacing:0}
+h1{font-size:clamp(40px,10vw,58px)} h2{font-size:clamp(30px,7.5vw,40px)}
+.brand{font-family:'Cormorant Garamond',serif;font-weight:600;letter-spacing:.32em;text-transform:uppercase;font-size:15px}
+.brand .dot{width:30px;height:30px;font-size:14px;color:#0a0a0a;box-shadow:0 0 0 1px #d9b45a55,0 0 18px -4px #d9b45a88}
+.eyebrow{letter-spacing:.32em;font-weight:500;font-size:11px}
+.gold-text,.hero h1 em{background:linear-gradient(135deg,#a8802f 0%,#f3dc8f 48%,#c49a3c 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+body{background:radial-gradient(900px 560px at 50% -12%,#2e2610 0%,transparent 65%),#0a0a0a;overflow-x:hidden}
+h1{font-size:clamp(42px,11vw,62px)}
+.disc{box-shadow:0 0 110px -10px #c9a24a55,0 0 0 1px #d9b45a33,0 30px 60px -20px #000}
+.play{text-transform:uppercase;letter-spacing:.16em;font-size:14px;font-weight:600;padding:19px 34px;box-shadow:0 12px 34px -12px #d9b45a,inset 0 1px 0 #fff6}
+.note{background:linear-gradient(180deg,#121212,#0d0d0d);border-color:#2e2a22}
+.note p{font-size:22px}
+.sec p{font-size:21px;font-weight:500}
+.sec.chorus{border-left:1px solid #d9b45a}
+.act{background:transparent;border-color:#2e2a22}
+.act:hover{border-color:#d9b45a}
+.cta{border-top-color:#2e2a22}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"><p class="brand">✦ Heartsong</p></div>
+<div class="toast" id="toast"></div>
+<script>
+const id=location.pathname.split("/").pop();
+let tries=0;
+const esc=s=>String(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=t=>isFinite(t)?Math.floor(t/60)+":"+String(Math.floor(t%60)).padStart(2,"0"):"0:00";
+function toast(t){const e=document.getElementById("toast");e.textContent=t;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1800)}
+function lyricsHTML(txt,clip){
+  const clipSet=new Set((clip||"").split("\n").map(l=>l.trim().toLowerCase()).filter(Boolean));
+  const line=l=>clipSet.has(l.trim().toLowerCase())?`<mark>${esc(l)}</mark>`:esc(l);
+  return txt.split(/\n(?=\[)/).map(block=>{const m=block.match(/^\[(.+?)\]\n?([\s\S]*)$/);const type=m?m[1]:"",body=m?m[2]:block;
+    return `<div class="sec ${/chorus/i.test(type)&&!/pre/i.test(type)?"chorus":""}">${type?`<h4>${esc(type)}</h4>`:""}<p>${body.trim().split("\n").map(line).join("<br>")}</p></div>`}).join("");
+}
+async function load(){
+  const app=document.getElementById("app");
+  let s;try{const r=await fetch("/api/song/"+id,{cache:"no-store"});if(!r.ok)throw 0;s=await r.json()}catch(e){app.innerHTML+=`<h1 style="margin-top:60px">Song not found</h1><p class="for">Check the link and try again.</p>`;return}
+  document.title=`${s.title} · a song for ${s.name}`;
+  if(s.status==="awaiting_payment"){
+    const q=new URLSearchParams(location.search),sid=q.get("session_id")||(q.get("paid")==="paypal"?"paypal":"");
+    app.innerHTML=`<p class="brand">✦ Heartsong</p><div class="wait"><div class="pulse"></div><p class="eyebrow">${sid?"Confirming your payment":"Waiting for payment"}</p>
+      <h1>${esc(s.title)}</h1><p class="for">${sid?"This only takes a moment.":"This order hasn't been paid yet."}</p></div>`;
+    if(sid){
+      tries=(typeof tries==="number"?tries:0)+1;
+      try{await fetch(`/api/orders/${id}/confirm${sid!=="paypal"?`?session_id=${encodeURIComponent(sid)}`:""}`,{method:"POST"})}catch(e){}
+      if(tries<20)setTimeout(load,tries<3?800:3000);
+    }
+    return;
+  }
+  if(s.status!=="delivered"){
+    if(/session_id=|paid=/.test(location.search)){try{history.replaceState(null,"",location.pathname)}catch(e){}}
+    app.innerHTML=`<p class="brand">✦ Heartsong</p><div class="wait"><div class="pulse"></div><p class="eyebrow">In the studio</p>
+      <h1>${esc(s.title)}</h1><p class="for">${s.paid?"✓ Payment received. ":""}${esc(s.name)}'s song is being recorded. We'll email you ${esc(s.promise)} when it's ready. This page updates on its own.</p></div>`;
+    setTimeout(load,60000);return;
+  }
+  app.innerHTML=`<p class="brand">✦ Heartsong</p>
+    <p class="eyebrow">A song written just for you</p>
+    <h1>${esc(s.title)}</h1>
+    <p class="for">For <b>${esc(s.name)}</b>${s.from?` · with love from <b>${esc(s.from)}</b>`:""}</p>
+    ${s.cover?`<div class="album" id="disc"><div class="rw"><div class="rec"></div></div><div class="sleeve"><img src="${s.cover}" alt="Song cover"></div></div>`:`<div class="disc" id="disc"><div class="label">✦</div></div>`}
+    <button class="play" id="play">▶ Play your song</button>
+    <div class="seek"><span id="cur">0:00</span><input type="range" id="seek" min="0" max="100" value="0" step="0.1"><span id="dur">0:00</span></div>
+    <audio id="au" src="${s.audio}" preload="metadata"></audio>
+    ${s.dedication?`<div class="note"><h3>A message for you</h3><p>“${esc(s.dedication)}”</p>${s.from?`<p class="sig">— ${esc(s.from)}</p>`:""}</div>`:""}
+    <div class="lyrics">${lyricsHTML(s.lyrics,s.clip)}</div>
+    <div class="actions"><button class="act" id="share">🔗 Share this song</button><a class="act" href="${s.audio}" download="${esc(s.title)}.mp3">⬇ Download</a></div>
+    <div class="cta">Someone you love deserves one too.<br><a href="/">Write a song for them →</a></div>`;
+  const au=document.getElementById("au"),pl=document.getElementById("play"),disc=document.getElementById("disc"),sk=document.getElementById("seek");
+  const toggle=()=>{if(au.paused){au.play().catch(()=>{})}else au.pause()};
+  pl.onclick=toggle;disc.onclick=toggle;
+  au.onplay=()=>{pl.textContent="❚❚ Pause";disc.classList.add("spin")};
+  au.onpause=au.onended=()=>{pl.textContent="▶ Play again";disc.classList.remove("spin")};
+  au.onloadedmetadata=()=>document.getElementById("dur").textContent=fmt(au.duration);
+  au.ontimeupdate=()=>{document.getElementById("cur").textContent=fmt(au.currentTime);if(au.duration)sk.value=au.currentTime/au.duration*100};
+  sk.oninput=()=>{if(au.duration)au.currentTime=sk.value/100*au.duration};
+  document.getElementById("share").onclick=async()=>{
+    const data={title:s.title,text:`Someone wrote a song just for ${s.name} 🎶`,url:location.href};
+    try{if(navigator.share){await navigator.share(data)}else{await navigator.clipboard.writeText(location.href);toast("Link copied")}}catch(e){}
+  };
+}
+load();
+</script>
+</body>
+</html>

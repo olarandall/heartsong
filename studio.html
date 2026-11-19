@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Heartsong Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070707;--card:#111111;--card2:#121212;--line:#2a261f;--ink:#f8f5ee;--muted:#bdb5a6;--dim:#7d766a;--amber:#d9b45a;--rose:#e8cf8a;--green:#a9c9a0;--glow:linear-gradient(135deg,#a8802f 0%,#f3dc8f 48%,#c49a3c 100%)}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:Jost,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{max-width:900px;margin:0 auto;padding:22px 16px 80px}
+header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:18px}
+h1{font-family:'Cormorant Garamond',serif;font-size:26px}
+.tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.tab{background:var(--card);border:1px solid var(--line);color:var(--muted);border-radius:999px;padding:9px 15px;font:500 14px Jost,system-ui,sans-serif;cursor:pointer}
+.tab.on{background:var(--ink);color:#0a0a0a;border-color:var(--ink);font-weight:700}
+.tab b{margin-left:4px}
+.order{background:var(--card);border:1px solid var(--line);border-radius:16px;margin-bottom:12px;overflow:hidden}
+.head{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:15px 16px;cursor:pointer}
+.head .t{font-weight:700;font-size:16px}
+.head .s{color:var(--dim);font-size:13.5px;margin-top:3px}
+.badge{border-radius:999px;padding:5px 10px;font-size:12px;font-weight:700;white-space:nowrap}
+.b-awaiting_payment{background:#1f1d18;color:#7d766a}.b-new{background:#2a1d14;color:#f0d78c}.b-in_studio{background:#2a2414;color:var(--amber)}.b-delivered{background:#16201a;color:var(--green)}
+.body{border-top:1px solid var(--line);padding:16px;display:grid;gap:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:700px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--card2);border-radius:12px;padding:14px}
+.panel h3{font-size:12px;text-transform:uppercase;letter-spacing:.13em;color:var(--rose);margin-bottom:10px;display:flex;justify-content:space-between;align-items:center}
+dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:14px}
+dt{color:var(--dim)} dd{white-space:pre-wrap}
+pre{white-space:pre-wrap;font:13px/1.55 ui-monospace,Menlo,monospace;color:#e8e2d4;background:#0a0a0a;border-radius:10px;padding:12px;max-height:340px;overflow:auto}
+textarea{width:100%;min-height:300px;background:#0a0a0a;color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:12px;font:13px/1.55 ui-monospace,Menlo,monospace}
+.btn{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:999px;padding:9px 14px;font:500 14px Jost,system-ui,sans-serif;cursor:pointer;text-decoration:none;display:inline-flex;gap:6px;align-items:center}
+.btn:hover{border-color:var(--amber)}
+.btn.primary{background:var(--glow);color:#0a0a0a;border:0;font-weight:700}
+.btn:disabled{opacity:.4;cursor:wait}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.steps{color:var(--muted);font-size:14px;line-height:1.6;padding-left:18px}
+.take{display:grid;gap:6px;padding:10px;border-radius:10px;border:1px solid var(--line);margin-top:8px}
+.take.chosen{border-color:var(--green);background:#121a15}
+.take .l{display:flex;justify-content:space-between;font-size:13.5px;color:var(--muted)}
+audio{width:100%;height:36px}
+.mini{font-size:12px;padding:5px 10px}
+.link{background:#16201a;border-radius:10px;padding:12px;font-size:14px;word-break:break-all}
+.link a{color:var(--green)}
+.empty{color:var(--dim);text-align:center;padding:50px 0}
+.toast{position:fixed;left:50%;top:16px;transform:translateX(-50%) translateY(-80px);background:var(--ink);color:#0a0a0a;padding:10px 16px;border-radius:999px;font-weight:700;font-size:14px;transition:transform .3s;z-index:9}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.warn{color:var(--amber);font-size:13px}
+
+/* ---- luxury finish ---- */
+h1{font-weight:600;font-size:30px}
+.order,.panel{border:1px solid #24211b}
+.tab.on{background:linear-gradient(135deg,#a8802f,#f3dc8f 48%,#c49a3c);color:#0a0a0a;border-color:transparent}
+.btn{background:transparent}
+.btn.primary{color:#0a0a0a}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+<div class="wrap">
+  <header><h1><span style="color:#d9b45a">✦</span> Heartsong Studio</h1><button class="btn" onclick="load()">↻ Refresh</button></header>
+  <div class="tabs" id="tabs"></div>
+  <div id="list"></div>
+</div>
+<script>
+let all=[],filter="new",open=null,cfg={};
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const $=s=>document.querySelector(s);
+function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("show");setTimeout(()=>e.classList.remove("show"),1800)}
+const LABEL={new:"New",in_studio:"In studio",delivered:"Delivered",awaiting_payment:"Unpaid"};
+const ago=t=>{const m=Math.round((Date.now()-new Date(t))/60000);return m<60?m+"m ago":m<1440?Math.round(m/60)+"h ago":Math.round(m/1440)+"d ago"};
+
+async function api(path,opts={}){const r=await fetch("/api/studio/"+path,opts);const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||"Error "+r.status);return j}
+async function load(){try{const j=await api("orders");all=j.orders;cfg=j;render()}catch(e){$("#list").innerHTML=`<p class="empty">${esc(e.message)}</p>`}}
+function upsert(o){all=all.map(x=>x.id===o.id?{...x,...o}:x);render()}
+
+function render(){
+  const counts={new:0,in_studio:0,delivered:0,awaiting_payment:0};all.forEach(o=>counts[o.status]=(counts[o.status]||0)+1);
+  $("#tabs").innerHTML=Object.keys(LABEL).map(k=>`<button class="tab ${filter===k?"on":""}" data-f="${k}">${LABEL[k]}<b>${counts[k]||0}</b></button>`).join("")+`<button class="tab ${filter==="all"?"on":""}" data-f="all">All<b>${all.length}</b></button>`;
+  document.querySelectorAll(".tab").forEach(t=>t.onclick=()=>{filter=t.dataset.f;render()});
+  const list=all.filter(o=>filter==="all"||o.status===filter);
+  $("#list").innerHTML=list.length?list.map(card).join(""):`<p class="empty">No ${filter==="all"?"":LABEL[filter].toLowerCase()+" "}orders yet.</p>`;
+  bind();
+}
+function styleBox(o){return o.song.style}
+function card(o){
+  const d=o.details,isOpen=open===o.id;
+  return `<div class="order" id="o-${o.id}">
+  <div class="head" data-open="${o.id}"><div><div class="t">${esc(o.song.title)} <span style="color:var(--dim);font-weight:400">for ${esc(d.name)}</span></div>
+  <div class="s">${esc(d.who)} · ${esc(d.occasion)} · ${esc(d.style||d.genre)} · ${esc(d.voice)} · ${ago(o.created)}</div></div>
+  <span class="badge b-${o.status}">${LABEL[o.status]||o.status}</span></div>
+  ${isOpen?`<div class="body">
+    <div class="grid">
+      <div class="panel"><h3>1 · Produce in Suno</h3>
+        <ol class="steps"><li>Open Suno → <b>Create</b> → <b>Custom</b>.</li><li>Paste <b>Style</b> and <b>Lyrics</b> into their boxes. Title = song title.</li><li>Generate 2–4 takes. Listen for: name sung correctly, clear lyrics, no glitches.</li><li>Download the best takes as MP3 and upload them here (step 2).</li></ol>
+        <div class="row" style="margin-top:10px">
+          <button class="btn" data-copy="style">📋 Copy style</button>
+          <button class="btn" data-copy="lyrics">📋 Copy lyrics</button>
+          <button class="btn" data-copy="title">📋 Title</button>
+          <a class="btn" href="https://suno.com/create" target="_blank" rel="noopener">Open Suno ↗</a>
+        </div>
+        ${d.pron?`<p class="warn" style="margin-top:10px">🗣 Name sounds like: <b>${esc(d.pron)}</b>. If it's sung wrong, spell it phonetically in the lyrics.</p>`:""}
+        <pre style="margin-top:12px"><b>STYLE</b>${d.style?` (${esc(d.style)})`:""}\n${esc(o.song.style)}</pre>
+        ${o.song.clip?`<pre style="margin-top:10px;border:1px solid #8a7340"><b>🎬 CLIP MOMENT</b>: this part must sound amazing (clear words, strongest vocal)\n${esc(o.song.clip)}</pre>`:""}
+      </div>
+      <div class="panel"><h3>Lyrics <button class="btn mini" data-edit>✏️ Edit</button></h3>
+        <div id="lyrBox-${o.id}"><pre>${esc(o.song.lyrics)}</pre></div></div>
+    </div>
+    <div class="panel"><h3>2 · Takes</h3>
+      <div class="row">
+        <label class="btn primary">⬆ Upload MP3 take(s)<input type="file" accept="audio/*" multiple hidden data-upload></label>
+        ${cfg.instant?`<button class="btn" data-instant>⚡ Instant ElevenLabs take</button>`:""}
+      </div>
+      ${o.takes.length?o.takes.map((t,i)=>`<div class="take ${o.chosen===t.file?"chosen":""}"><div class="l"><span>Take ${i+1} · ${esc(t.label)}</span>
+        ${o.chosen===t.file?`<span style="color:var(--green)">✓ Will be delivered</span>`:`<button class="btn mini" data-choose="${esc(t.file)}">Use this take</button>`}</div>
+        <audio controls preload="none" src="/audio/${esc(t.file)}"></audio></div>`).join(""):`<p class="steps" style="padding:10px 0 0">No takes yet.</p>`}
+    </div>
+    <div class="panel"><h3>3 · Deliver</h3>
+      ${o.status==="delivered"?`<div class="link">✓ Delivered ${o.emailed?"by email to "+esc(o.contact.email):"(email not configured, send this link yourself)"}<br><a href="/song/${o.id}" target="_blank">${location.origin}/song/${o.id}</a></div>
+        <div class="row" style="margin-top:10px"><button class="btn" data-copylink>📋 Copy link</button><button class="btn" data-deliver>Re-send with chosen take</button></div>`
+      :`<p class="steps" style="padding:0 0 10px">Sends the song page to <b>${esc(o.contact.email)}</b>${o.contact.phone?` (phone ${esc(o.contact.phone)})`:""}.${cfg.email?"":` <span class="warn">Email isn't set up: you'll get the link to send by hand.</span>`}</p>
+        <button class="btn primary" data-deliver ${o.chosen?"":"disabled"}>💌 Approve &amp; deliver</button>`}
+    </div>
+    <div class="panel"><h3>Customer brief</h3>
+      ${o.cover?`<div class="row" style="margin-bottom:12px"><img src="/cover/${esc(o.cover)}" alt="" style="width:96px;height:96px;object-fit:cover;border:1px solid #8a7340;border-radius:4px"><a class="btn" href="/cover/${esc(o.cover)}" target="_blank" rel="noopener">⬇ Cover photo</a></div>`:""}
+      <dl>
+      ${[["From",d.from],["To",`${d.name}${d.nick?` ("${d.nick}")`:""} · ${d.who}`],["Occasion",d.occasion],["Sound",[d.genre,d.voice,d.mood,d.lang].join(" · ")],["Qualities",d.qualities],["Memories",d.memories],["Message",d.message],["Payment",o.paid?`✓ Paid ${(o.paid.amount/100).toLocaleString(undefined,{style:"currency",currency:(o.paid.currency||"usd").toUpperCase()})}${o.paid.provider?" via "+(o.paid.provider==="paypal"?"PayPal":"Stripe"):""} · ${new Date(o.paid.at).toLocaleString()}${o.paid.ref?" · ref "+o.paid.ref:""}`:(cfg.payments?"Not paid":"Free (payments off)")],["Contact",o.contact.email+(o.contact.phone?" · "+o.contact.phone:"")]].filter(r=>r[1]).map(r=>`<dt>${r[0]}</dt><dd>${esc(r[1])}</dd>`).join("")}
+    </dl></div>
+  </div>`:""}</div>`;
+}
+function bind(){
+  document.querySelectorAll("[data-open]").forEach(h=>h.onclick=()=>{open=open===h.dataset.open?null:h.dataset.open;render()});
+  if(!open)return;const o=all.find(x=>x.id===open);if(!o)return;const root=$("#o-"+o.id);if(!root)return;
+  root.querySelectorAll("[data-copy]").forEach(b=>b.onclick=async()=>{const v={style:o.song.style,lyrics:o.song.lyrics,title:o.song.title}[b.dataset.copy];try{await navigator.clipboard.writeText(v);toast("Copied")}catch(e){toast("Select and copy by hand")}});
+  const cl=root.querySelector("[data-copylink]");if(cl)cl.onclick=async()=>{try{await navigator.clipboard.writeText(location.origin+"/song/"+o.id);toast("Link copied")}catch(e){}};
+  root.querySelector("[data-edit]").onclick=()=>{const box=$("#lyrBox-"+o.id);box.innerHTML=`<textarea id="lt">${esc(o.song.lyrics)}</textarea><button class="btn primary" id="ls" style="margin-top:8px">Save lyrics</button>`;
+    $("#ls").onclick=async()=>{try{upsert(await api(`orders/${o.id}/lyrics`,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({lyrics:$("#lt").value})}));toast("Lyrics saved")}catch(e){toast(e.message)}}};
+  const up=root.querySelector("[data-upload]");
+  up.onchange=async()=>{const files=[...up.files];for(const [i,f] of files.entries()){toast(`Uploading ${i+1}/${files.length}…`);
+    try{upsert(await api(`orders/${o.id}/upload?label=${encodeURIComponent(f.name.slice(0,60))}`,{method:"POST",headers:{"Content-Type":"audio/mpeg"},body:f}))}catch(e){toast(e.message);return}}toast("Uploaded")};
+  const ins=root.querySelector("[data-instant]");if(ins)ins.onclick=async()=>{ins.disabled=true;ins.textContent="⚡ Generating (1–2 min)…";try{upsert(await api(`orders/${o.id}/instant`,{method:"POST"}));toast("Take ready")}catch(e){toast(e.message);ins.disabled=false;ins.textContent="⚡ Try again"}};
+  root.querySelectorAll("[data-choose]").forEach(b=>b.onclick=async()=>{try{upsert(await api(`orders/${o.id}/choose/${encodeURIComponent(b.dataset.choose)}`,{method:"POST"}))}catch(e){toast(e.message)}});
+  root.querySelectorAll("[data-deliver]").forEach(b=>b.onclick=async()=>{b.disabled=true;b.textContent="Delivering…";
+    try{const r=await api(`orders/${o.id}/deliver`,{method:"POST"});upsert(r);toast(r.emailed?"Delivered by email 💌":"Delivered: copy the link to send")}catch(e){toast(e.message);b.disabled=false;b.textContent="Try again"}});
+}
+load();setInterval(()=>{if(!open)load()},30000);
+</script>
+</body>
+</html>

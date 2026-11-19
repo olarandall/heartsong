@@ -1,0 +1,34 @@
+# One-click setup for Render (render.com → New → Blueprint → pick this repo).
+# Render will ask you to paste the keys below. Everything else is preset.
+services:
+  - type: web
+    name: heartsong
+    runtime: node
+    buildCommand: echo "No build needed"
+    startCommand: node server.js
+    autoDeployTrigger: commit
+    disk:
+      name: heartsong-data        # keeps orders, songs and cover photos safe between updates
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: ANTHROPIC_API_KEY    # from console.anthropic.com → API keys (Claude writes the lyrics)
+        sync: false
+      - key: PAYPAL_CLIENT_ID     # developer.paypal.com → Apps & Credentials → your app
+        sync: false
+      - key: PAYPAL_CLIENT_SECRET # same page, "Secret key 1"
+        sync: false
+      - key: PAYPAL_MODE          # "sandbox" for test payments; change to "live" to take real money
+        value: sandbox
+      - key: ADMIN_PASSWORD       # make one up: it unlocks your /studio page
+        sync: false
+      - key: BASE_URL               # your domain: used in emailed links, Stripe returns and share previews
+        value: https://heartsong.shop
+      - key: MAIL_FROM
+        value: Heartsong <songs@heartsong.shop>
+      - key: DATA_DIR
+        value: /var/data
+      - key: PRICE_CENTS
+        value: "5000"
+      - key: NODE_VERSION
+        value: "20"
