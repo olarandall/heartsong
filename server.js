@@ -31,7 +31,18 @@ const STRIPE_KEY = process.env.STRIPE_SECRET_KEY;          // sk_test_... or sk_
 const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET; // whsec_...
 const PRICE_CENTS = parseInt(process.env.PRICE_CENTS || "5000", 10);
 const CURRENCY = (process.env.CURRENCY || "usd").toLowerCase();
-const PRICE_LABEL = new Intl.NumberFormat("en-US", { style: "currency", currency: CURRENCY, minimumFractionDigits: PRICE_CENTS % 100 ? 2 : 0 }).format(PRICE_CENTS / 100);
+const money = (cents) => new Intl.NumberFormat("en-US", { style: "currency", currency: CURRENCY, minimumFractionDigits: cents % 100 ? 2 : 0 }).format(cents / 100);
+const PRICE_LABEL = money(PRICE_CENTS);
+// Coupon codes: COUPONS="THANKS:50,VIP:100" means THANKS = 50% off, VIP = free. Edit in Render → Environment.
+const COUPONS = Object.fromEntries(String(process.env.COUPONS || "").split(",").map((x) => x.trim().split(":"))
+  .filter(([c, p]) => c && Number(p) > 0 && Number(p) <= 100).map(([c, p]) => [c.trim().toUpperCase(), Number(p)]));
+function priceFor(code) {
+  const c = String(code || "").trim().toUpperCase();
+  const pct = COUPONS[c];
+  if (!pct) return { cents: PRICE_CENTS, label: PRICE_LABEL, coupon: null, percent: 0 };
+  const cents = Math.round(PRICE_CENTS * (100 - pct) / 100);
+  return { cents, label: money(cents), coupon: c, percent: pct };
+}
 const PAYPAL_ID = process.env.PAYPAL_CLIENT_ID;
 const PAYPAL_SECRET = process.env.PAYPAL_CLIENT_SECRET;
 const PAYPAL_WEBHOOK_ID = process.env.PAYPAL_WEBHOOK_ID; // optional
@@ -156,7 +167,7 @@ async function createCheckout(o) {
     "payment_intent_data[metadata][order_id]": o.id,
     "line_items[0][quantity]": "1",
     "line_items[0][price_data][currency]": CURRENCY,
-    "line_items[0][price_data][unit_amount]": String(PRICE_CENTS),
+    "line_items[0][price_data][unit_amount]": String(o.price ?? PRICE_CENTS),
     "line_items[0][price_data][product_data][name]": `Custom song for ${o.details.name}`.slice(0, 120),
     "line_items[0][price_data][product_data][description]": `"${o.song.title}": an original ${o.details.style || o.details.genre || ""} song, studio-recorded and delivered ${DELIVERY_PROMISE}.`.slice(0, 300),
     allow_promotion_codes: "true",
@@ -208,7 +219,7 @@ async function createPaypalOrder(o) {
     purchase_units: [{
       reference_id: o.id, custom_id: o.id,
       description: `Custom song for ${o.details.name}: "${o.song.title}"`.slice(0, 127),
-      amount: { currency_code: CURRENCY.toUpperCase(), value: priceValue() },
+      amount: { currency_code: CURRENCY.toUpperCase(), value: ((o.price ?? PRICE_CENTS) / 100).toFixed(2) },
     }],
     payment_source: { paypal: { experience_context: {
       brand_name: "Heartsong", user_action: "PAY_NOW", shipping_preference: "NO_SHIPPING",
@@ -317,6 +328,11 @@ http.createServer(async (req, res) => {
     }
 
     // Customer API
+    if (M === "GET" && p === "/api/coupon") {
+      const pr = priceFor(url.searchParams.get("code"));
+      return pr.coupon ? send(res, 200, { valid: true, code: pr.coupon, percent: pr.percent, price: pr.label, original: PRICE_LABEL })
+                       : send(res, 200, { valid: false });
+    }
     if (M === "GET" && p === "/api/health") return send(res, 200, { ok: Boolean(ANTHROPIC_KEY), orders: true, promise: DELIVERY_PROMISE, price: PRICE_LABEL, payments: Boolean(PROVIDER), provider: PROVIDER });
     if (M === "POST" && p === "/api/lyrics") {
       const { prompt } = await readJson(req);
@@ -329,8 +345,10 @@ http.createServer(async (req, res) => {
       if (!b.song?.lyrics || !b.song?.title) return send(res, 400, { error: "Missing song." });
       const id = newId();
       const d = b.details || {};
+      const pr = priceFor(b.coupon);
+      const free = pr.cents === 0;
       orders[id] = {
-        id, status: PROVIDER ? "awaiting_payment" : "new", created: new Date().toISOString(), takes: [], chosen: null,
+        id, status: PROVIDER && !free ? "awaiting_payment" : "new", price: pr.cents, coupon: pr.coupon, created: new Date().toISOString(), takes: [], chosen: null,
         contact: { email, phone: str(b.contact?.phone, 40) },
         details: Object.fromEntries(Object.entries(d).map(([k, v]) => [k, str(v, 3000)])),
         song: { title: str(b.song.title, 120), style: str(b.song.style, 1000), lyrics: str(b.song.lyrics, 6000), why: str(b.song.why, 400), clip: str(b.song.clip, 600) },
@@ -339,13 +357,14 @@ http.createServer(async (req, res) => {
       const cover = decodeCover(b.cover);
       if (cover) { fs.writeFileSync(path.join(COVERS, `${id}.jpg`), cover); orders[id].cover = `${id}.jpg`; }
       persist();
-      console.log(`[order] ${id} for ${orders[id].details.name} (${email})`);
-      if (PROVIDER === "paypal") {
+      console.log(`[order] ${id} for ${orders[id].details.name} (${email}) ${pr.label}${pr.coupon ? ` with ${pr.coupon}` : ""}`);
+      if (free && PROVIDER) markPaid(orders[id], { amount: 0, currency: CURRENCY, ref: pr.coupon, provider: "coupon" });
+      if (PROVIDER === "paypal" && !free) {
         const pp = await createPaypalOrder(orders[id]);
         orders[id].paypal = pp.id; persist();
         return send(res, 200, { id, link: `/song/${id}`, promise: DELIVERY_PROMISE, checkoutUrl: pp.url });
       }
-      if (PROVIDER === "stripe") {
+      if (PROVIDER === "stripe" && !free) {
         const session = await createCheckout(orders[id]);
         orders[id].checkout = session.id; persist();
         return send(res, 200, { id, link: `/song/${id}`, promise: DELIVERY_PROMISE, checkoutUrl: session.url });

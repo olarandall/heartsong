@@ -40,6 +40,7 @@ ANTHROPIC_API_KEY=sk-ant-...  ADMIN_PASSWORD=pick-a-strong-one  node server.js
 | `STRIPE_SECRET_KEY` | Stripe instead of PayPal: used only when no PayPal keys are set |
 | `STRIPE_WEBHOOK_SECRET` | Stripe only: confirms payments if the customer closes the tab |
 | `PRICE_CENTS`, `CURRENCY` | Price per song, default `5000` (= $50) and `usd` |
+| `COUPONS` | Coupon codes as `CODE:percent`, comma-separated. Example: `THANKS:50,VIP:100` (THANKS = 50% off, VIP = free). Codes aren't case-sensitive. |
 | `PORT` | Default 3000 |
 
 ## Producing an order

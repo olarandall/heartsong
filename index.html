@@ -238,7 +238,7 @@ const M_SPARKS=["How we met:","The trip we still talk about:","Our inside joke:"
 
 const STEPS=["who","name","occasion","sound","qualities","memories","message","review"];
 let d=load()||{who:"",whoOther:"",name:"",nick:"",pron:"",from:"",occasion:"",occOther:"",genre:"",voice:"",mood:"",lang:"English",qualities:"",memories:"",message:""};
-let step=-1, song=null, busy=false, backend=false, sampleFn=null, order=null, promise="within 24 hours", cover=null, price="", payments=false, provider=null;
+let step=-1, song=null, busy=false, backend=false, sampleFn=null, order=null, promise="within 24 hours", cover=null, price="", payments=false, provider=null, coupon=null;
 
 function load(){try{return JSON.parse(localStorage.getItem("hs_draft"))}catch(e){return null}}
 function save(){try{localStorage.setItem("hs_draft",JSON.stringify(d))}catch(e){}}
@@ -469,7 +469,10 @@ function audioPanel(){
     <p class="sub" style="font-size:15px">Love the lyrics? Our producers record them as a full studio track with real-sounding vocals, and we pick the best of several takes. Delivered ${esc(promise)}.</p>
     <div class="label">Your email</div><input type="text" id="oEmail" inputmode="email" autocomplete="email" placeholder="you@email.com" value="${esc(d.email||"")}">
     <div class="label">Phone <span class="hint">(optional, for a text when it's ready)</span></div><input type="text" id="oPhone" inputmode="tel" autocomplete="tel" placeholder="(555) 555-5555" value="${esc(d.phone||"")}">
-    <button class="btn primary" id="orderBtn" style="width:100%;margin-top:16px">Make ${esc(d.name)}'s song${payments&&price?` · ${esc(price)}`:""}</button>
+    <div class="label">Coupon code <span class="hint">(optional)</span></div>
+    <div style="display:flex;gap:8px"><input type="text" id="cCode" autocapitalize="characters" autocomplete="off" placeholder="Enter code" value="${esc(coupon?coupon.code:"")}" style="flex:1;text-transform:uppercase"><button class="tool" id="cApply" style="flex:0 0 auto">${coupon?"✓ Applied":"Apply"}</button></div>
+    <div id="cMsg" class="hint" style="margin-top:6px">${coupon?`<span style="color:#e8cf8a">${esc(coupon.code)}: ${coupon.percent}% off</span>`:""}</div>
+    <button class="btn primary" id="orderBtn" style="width:100%;margin-top:16px">Make ${esc(d.name)}'s song${payments&&price?(coupon?` · <s style="opacity:.55">${esc(coupon.original)}</s> ${esc(coupon.price)}`:` · ${esc(price)}`):""}</button>
     <p class="hint" style="text-align:center;margin-top:10px">${payments?(provider==="paypal"?"🔒 Secure checkout with PayPal · pay with PayPal or a debit/credit card<br>":"🔒 Secure checkout by Stripe · Apple Pay · Google Pay · cards<br>"):""}💯 Unlimited re-dos until it's perfect</p>
     <div id="orderErr"></div>`;
 }
@@ -478,6 +481,8 @@ function bindResult(){
   $("#copyLyrics").onclick=()=>copy(`${song.title}\nfor ${d.name}\n\n${lyricsText(song)}`,"Lyrics copied");
   $("#editBtn").onclick=editLyrics;
   const ob=$("#orderBtn");if(ob)ob.onclick=placeOrder;
+  const ca=$("#cApply");if(ca)ca.onclick=applyCoupon;
+  const ci2=$("#cCode");if(ci2){ci2.onkeydown=e=>{if(e.key==="Enter"){e.preventDefault();applyCoupon()}};ci2.oninput=()=>{if(coupon){coupon=null;ca.textContent="Apply";$("#cMsg").innerHTML=""}}}
   const ci=$("#coverIn");if(ci)ci.onchange=async()=>{const f=ci.files[0];if(!f)return;
     try{toast("Preparing your cover…");cover=await makeCover(f);render();toast("Cover added ✦")}catch(e){toast("That photo couldn't be used. Try another.")}};
   const cr=$("#coverRm");if(cr)cr.onclick=()=>{cover=null;render()};
@@ -505,6 +510,16 @@ async function makeCover(file){
   c.getContext("2d").drawImage(src,(w-side)/2,(h-side)/2,side,side,0,0,out,out);
   return c.toDataURL("image/jpeg",0.86);
 }
+async function applyCoupon(){
+  const code=($("#cCode").value||"").trim().toUpperCase(),msg=$("#cMsg");
+  d.email=($("#oEmail")||{}).value||d.email;d.phone=($("#oPhone")||{}).value||d.phone;
+  if(!code){coupon=null;msg.innerHTML="";return}
+  if(!backend){msg.innerHTML="Codes work on heartsong.shop.";return}
+  try{const r=await fetch("api/coupon?code="+encodeURIComponent(code),{cache:"no-store"});const j=await r.json();
+    if(j.valid){coupon=j;render();toast(`${j.code}: ${j.percent}% off ✦`)}
+    else{coupon=null;msg.innerHTML=`<span style="color:#e8a090">That code isn't valid.</span>`}
+  }catch(e){msg.innerHTML="Couldn't check the code. Try again."}
+}
 async function placeOrder(){
   const b=$("#orderBtn"),err=$("#orderErr");
   d.email=$("#oEmail").value.trim();d.phone=$("#oPhone").value.trim();save();
@@ -513,7 +528,7 @@ async function placeOrder(){
   b.disabled=true;b.textContent="Sending to the studio…";err.innerHTML="";
   try{
     const details={who:d.who==="Other"?d.whoOther:d.who,name:d.name,nick:d.nick,pron:d.pron,from:d.from,occasion:d.occasion==="Other"?d.occOther:d.occasion,genre:d.genre,style:niche().n.replace("🔥 ",""),voice:d.voice,mood:d.mood,lang:d.lang,qualities:d.qualities,memories:d.memories,message:d.message};
-    const r=await fetch("api/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({details,contact:{email:d.email,phone:d.phone},song:{title:song.title,style:song.style,lyrics:lyricsText(song),why:song.why||"",clip:(song.clip&&song.clip.lines||[]).join("\n")},cover})});
+    const r=await fetch("api/orders",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({details,contact:{email:d.email,phone:d.phone},song:{title:song.title,style:song.style,lyrics:lyricsText(song),why:song.why||"",clip:(song.clip&&song.clip.lines||[]).join("\n")},cover,coupon:coupon?coupon.code:""})});
     const j=await r.json();if(!r.ok)throw new Error(j.error||"Couldn't place the order");
     if(j.checkoutUrl){
       // Keep the song on this device in case they back out of checkout.
